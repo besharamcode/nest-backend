@@ -1,29 +1,12 @@
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
+import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
 import {
-  IsBoolean,
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+  PaginatedResponse,
+  PaginationQueryDto,
+} from 'src/common/dto/pagination.dto';
 import { User } from '../schemas/user.schema';
 
-export class GetUsersQueryDto {
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 10;
-
+export class GetUsersQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
@@ -37,7 +20,7 @@ export class GetUsersQueryDto {
 
   @IsOptional()
   @IsIn(['createdAt', 'updatedAt', 'firstName', 'lastName', 'email'])
-  sortBy?: 'createdAt' | 'updatedAt' | 'firstName' | 'lastName' | 'email' =
+  sortBy: 'createdAt' | 'updatedAt' | 'firstName' | 'lastName' | 'email' =
     'createdAt';
 
   @IsOptional()
@@ -45,14 +28,4 @@ export class GetUsersQueryDto {
   sortOrder?: 'asc' | 'desc' = 'desc';
 }
 
-export class PaginatedUsersDto {
-  data: Array<Omit<User, 'password'>>;
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
+export type PaginatedUsersDto = PaginatedResponse<Omit<User, 'password'>>;

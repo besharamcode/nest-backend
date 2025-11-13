@@ -4,7 +4,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { GetUsersQueryDto, PaginatedUsersDto } from './dto/list-users.dto';
+import { GetUsersQueryDto } from './dto/list-users.dto';
+import {
+  buildPaginationMeta,
+  normalizePagination,
+  PaginatedResponse,
+} from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class UserService {
@@ -16,20 +21,17 @@ export class UserService {
     return user;
   }
 
-  async findAll(query: GetUsersQueryDto): Promise<PaginatedUsersDto> {
+  async findAll(
+    query: GetUsersQueryDto,
+  ): Promise<PaginatedResponse<Omit<User, 'password'>>> {
     const {
-      page = 1,
-      limit = 10,
       search,
       includeDeleted = false,
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = query;
 
-    const currentPage = Number.isFinite(page) && page > 0 ? page : 1;
-    const pageSize =
-      Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : 10;
-    const skip = (currentPage - 1) * pageSize;
+    const { page, limit, skip } = normalizePagination(query);
 
     const filter: FilterQuery<UserDocument> = includeDeleted
       ? {}
@@ -52,24 +54,15 @@ export class UserService {
         .select('-password -__v')
         .sort({ [sortBy]: sortDirection })
         .skip(skip)
-        .limit(pageSize)
+        .limit(limit)
         .lean()
         .exec(),
       this.model.countDocuments(filter),
     ]);
 
-    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
-
     return {
       data: users as Array<Omit<User, 'password'>>,
-      meta: {
-        total,
-        page: currentPage,
-        limit: pageSize,
-        totalPages,
-        hasNext: currentPage < totalPages,
-        hasPrev: currentPage > 1,
-      },
+      meta: buildPaginationMeta(total, page, limit),
     };
   }
 
