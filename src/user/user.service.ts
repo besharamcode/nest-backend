@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
+import { GetUsersQueryDto, PaginatedUsersDto } from './dto/list-users.dto';
 
 @Injectable()
 export class UserService {
@@ -15,9 +16,61 @@ export class UserService {
     return user;
   }
 
-  async findAll() {
-    const users = await this.model.find().exec();
-    return users;
+  async findAll(query: GetUsersQueryDto): Promise<PaginatedUsersDto> {
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      includeDeleted = false,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = query;
+
+    const currentPage = Number.isFinite(page) && page > 0 ? page : 1;
+    const pageSize =
+      Number.isFinite(limit) && limit > 0 ? Math.min(limit, 100) : 10;
+    const skip = (currentPage - 1) * pageSize;
+
+    const filter: FilterQuery<UserDocument> = includeDeleted
+      ? {}
+      : { deleted: { $ne: true } };
+
+    if (search?.trim()) {
+      const regex = new RegExp(search.trim(), 'i');
+      filter.$or = [
+        { email: regex },
+        { firstName: regex },
+        { lastName: regex },
+      ];
+    }
+
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+
+    const [users, total] = await Promise.all([
+      this.model
+        .find(filter)
+        .select('-password -__v')
+        .sort({ [sortBy]: sortDirection })
+        .skip(skip)
+        .limit(pageSize)
+        .lean()
+        .exec(),
+      this.model.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+
+    return {
+      data: users as Array<Omit<User, 'password'>>,
+      meta: {
+        total,
+        page: currentPage,
+        limit: pageSize,
+        totalPages,
+        hasNext: currentPage < totalPages,
+        hasPrev: currentPage > 1,
+      },
+    };
   }
 
   async findOne(query: FilterQuery<UserDocument>) {

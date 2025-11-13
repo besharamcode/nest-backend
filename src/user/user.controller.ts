@@ -8,11 +8,13 @@ import {
   Delete,
   UseGuards,
   ConflictException,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { GetUsersQueryDto, PaginatedUsersDto } from './dto/list-users.dto';
 
 @Controller('user')
 export class UserController {
@@ -30,8 +32,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Query() query: GetUsersQueryDto): Promise<PaginatedUsersDto> {
+    return this.userService.findAll(query);
   }
 
   @UseGuards(JwtAuthGuard)
