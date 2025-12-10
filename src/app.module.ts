@@ -6,6 +6,8 @@ import { UserModule } from './user/user.module';
 import { ConfigurationModule } from './config/config.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { SocketModule } from './socket/socket.module';
+import { RedisModule } from './redis/redis.module';
+import { RateLimitModule } from './rate-limit/rate-limit.module';
 
 @Module({
   imports: [
@@ -21,6 +23,8 @@ import { SocketModule } from './socket/socket.module';
     }),
     CloudinaryModule,
     SocketModule,
+    RedisModule,
+    RateLimitModule,
   ],
 })
 export class AppModule {}
