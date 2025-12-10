@@ -34,12 +34,6 @@ export class User {
   @Prop({ default: false })
   deleted: boolean;
 
-  @Prop({ type: String })
-  socketId?: string;
-
-  @Prop({ default: false })
-  online?: boolean;
-
   @Prop({ type: Date })
   createdAt: Date;
 

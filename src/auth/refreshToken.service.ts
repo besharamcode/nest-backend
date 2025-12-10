@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, ObjectId } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import {
@@ -63,7 +63,7 @@ export class RefreshTokenService {
     await this.model.updateOne({ token }, { isActive: false });
   }
 
-  async revokeAllUserRefreshTokens(userId: string): Promise<void> {
+  async revokeAllUserRefreshTokens(userId: ObjectId): Promise<void> {
     await this.model.updateMany(
       { userId, isActive: true },
       { isActive: false },

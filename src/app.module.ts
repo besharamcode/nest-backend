@@ -5,7 +5,6 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigurationModule } from './config/config.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
-import { SocketModule } from './socket/socket.module';
 
 @Module({
   imports: [
@@ -20,7 +19,6 @@ import { SocketModule } from './socket/socket.module';
       inject: [ConfigService],
     }),
     CloudinaryModule,
-    SocketModule,
   ],
 })
 export class AppModule {}

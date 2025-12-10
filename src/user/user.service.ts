@@ -3,13 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
-import { GetUsersQueryDto } from './dto/list-users.dto';
-import {
-  buildPaginationMeta,
-  normalizePagination,
-  PaginatedResponse,
-} from 'src/common/dto/pagination.dto';
+import { FilterQuery, Model, ObjectId } from 'mongoose';
 
 @Injectable()
 export class UserService {
@@ -21,49 +15,9 @@ export class UserService {
     return user;
   }
 
-  async findAll(
-    query: GetUsersQueryDto,
-  ): Promise<PaginatedResponse<Omit<User, 'password'>>> {
-    const {
-      search,
-      includeDeleted = false,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-    } = query;
-
-    const { page, limit, skip } = normalizePagination(query);
-
-    const filter: FilterQuery<UserDocument> = includeDeleted
-      ? {}
-      : { deleted: { $ne: true } };
-
-    if (search?.trim()) {
-      const regex = new RegExp(search.trim(), 'i');
-      filter.$or = [
-        { email: regex },
-        { firstName: regex },
-        { lastName: regex },
-      ];
-    }
-
-    const sortDirection = sortOrder === 'asc' ? 1 : -1;
-
-    const [users, total] = await Promise.all([
-      this.model
-        .find(filter)
-        .select('-password -__v')
-        .sort({ [sortBy]: sortDirection })
-        .skip(skip)
-        .limit(limit)
-        .lean()
-        .exec(),
-      this.model.countDocuments(filter),
-    ]);
-
-    return {
-      data: users as Array<Omit<User, 'password'>>,
-      meta: buildPaginationMeta(total, page, limit),
-    };
+  async findAll() {
+    const users = await this.model.find().exec();
+    return users;
   }
 
   async findOne(query: FilterQuery<UserDocument>) {
@@ -74,19 +28,19 @@ export class UserService {
     return this.model.findOne({ email }).exec();
   }
 
-  async findById(id: string) {
+  async findById(id: ObjectId) {
     const user = await this.model.findById(id);
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: ObjectId, updateUserDto: UpdateUserDto) {
     const user = await this.model.findByIdAndUpdate(id, updateUserDto, {
       new: true,
     });
     return user;
   }
 
-  async remove(id: string) {
+  async remove(id: ObjectId) {
     const user = await this.model.findById(id);
     if (!user) {
       throw new Error('User not found');

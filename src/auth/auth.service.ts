@@ -139,11 +139,11 @@ export class AuthService {
     await this.refreshTokenService.revokeRefreshToken(refreshToken);
   }
 
-  async logoutAll(userId: string): Promise<void> {
+  async logoutAll(userId: ObjectId): Promise<void> {
     await this.refreshTokenService.revokeAllUserRefreshTokens(userId);
   }
 
-  async getProfile(userId: string): Promise<Omit<User, 'password'>> {
+  async getProfile(userId: ObjectId): Promise<Omit<User, 'password'>> {
     const user = await this.userService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -151,7 +151,7 @@ export class AuthService {
     return this.userWithoutPassword(user);
   }
 
-  async validateToken(userId: string): Promise<Omit<User, 'password'>> {
+  async validateToken(userId: ObjectId): Promise<Omit<User, 'password'>> {
     const user = await this.userService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
